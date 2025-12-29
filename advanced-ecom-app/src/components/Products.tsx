@@ -6,28 +6,34 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 import { useQuery } from "@tanstack/react-query";
+import type { Product } from "../models/Product.model";
+import { addToCart } from "../redux/CartActionsSlice";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
-type Product = {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string;
-  inCart: boolean;
-};
+interface ProductsProps {
+  filterCategory?:string;
+}
 
 const fetchProducts = async (): Promise<Product[]> => {
   const response = await axios.get("https://fakestoreapi.com/products");
   return response.data;
 };
 
-const Products = () => {
+const Products: React.FC<ProductsProps> = ({  filterCategory }) => {
   const { data, isLoading, error } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: fetchProducts,
   });
-  console.log(data);
+ 
+  const items = data ?? [];
+  const filtered = items.filter((p)=>
+    !filterCategory || filterCategory === "All" ? true : p.category == filterCategory
+  );
+
+  const dispatch = useAppDispatch();
+
+  const cartItems = useAppSelector((state) => state.cart.items);
+  console.log(cartItems);
 
   if (isLoading) {
     return (
@@ -43,6 +49,8 @@ const Products = () => {
         </h3>
       </Container>
     );
+
+    
   }
 
   if (error) return <p>Error loading posts</p>;
@@ -54,7 +62,7 @@ const Products = () => {
       </h1>
       <p className="text-center">Choose from a variety of stylish products</p>
       <Row className="row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 justify-content-center">
-        {data?.map((product) => (
+        {filtered?.map((product) => (
           <Col key={product.id} className="d-flex align-items-stretch">
             <Card className="d-flex flex-column">
               <Card.Body className="d-flex flex-column flex-grow-1 shadow">
@@ -83,13 +91,26 @@ const Products = () => {
                 <Card.Text className="mt-3 font-weight-bold p-2">
                   Price: ${product.price}
                 </Card.Text>
+                <Card.Text className="mt-3 font-weight-bold p-2">
+                  Rating: {product.rating.rate} ({product.rating.count} reviews)
+                </Card.Text>
 
                 <Button
-                  href={`/ProductDetails/${product.id}`}
+                  //href={`/productdetails/${product.id}`}
                   variant="primary"
                   className="mt-auto d-block mx-auto"
+                  onClick={()=>
+                    dispatch(
+                      addToCart({
+                        id: product.id,
+                        title: product.title,
+                        price: product.price,
+                        image: product.image,
+                      })
+                    )
+                  }
                 >
-                  View Details
+                  Add to Cart
                 </Button>
               </Card.Body>
             </Card>

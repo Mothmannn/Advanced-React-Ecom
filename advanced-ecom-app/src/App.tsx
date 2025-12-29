@@ -1,13 +1,18 @@
+import { Routes, Route } from "react-router-dom";
+import ProductDetails from "./components/ProductDetails";
 import HomePage from "./components/HomePage";
-import './App.css'
+import Cart from "./components/Cart";
 
 function App() {
-
   return (
     <>
-      <HomePage />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/productdetails" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
